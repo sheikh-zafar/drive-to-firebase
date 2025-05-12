@@ -1,10 +1,10 @@
-import { NextApiRequest, NextApiResponse } from 'next';
 import { google } from 'googleapis';
 import { getStorage, ref, uploadBytes } from 'firebase/storage';
 import { initializeApp } from 'firebase/app';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { NextRequest } from 'next/server';
 
 // Firebase configuration interface
 interface FirebaseConfig {
@@ -23,21 +23,49 @@ interface GoogleCredentials {
   redirect_uri: string;
 }
 
-// Firebase configuration - replace with your own
+// Request body interface
+interface TransferRequestBody {
+  folderIdOrUrl: string;
+  accessToken: string;
+  destinationPath?: string;
+}
+
+interface GoogleDriveFile {
+  id?: string;
+  name?: string;
+  mimeType?: string;
+  size?: string | number;
+}
+
+interface FileTransferResult {
+  name: string;
+  status: 'success' | 'error';
+  size?: number;
+  firebasePath?: string;
+  error?: string;
+}
+
+interface TransferResponse {
+  message: string;
+  totalFiles: number;
+  results: FileTransferResult[];
+}
+
+// Firebase configuration
 const firebaseConfig: FirebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDovXYb6jKKQSI43tIJLBxC95HnE2X2h4Q",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "audios-ea425.firebaseapp.com",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "audios-ea425",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "audios-ea425.firebasestorage.app",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "526215918629",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:526215918629:web:4633482e467c3525997bcc"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
 };
 
-// Google Drive API credentials - replace with your own
+// Google Drive API credentials
 const credentials: GoogleCredentials = {
-  client_id: process.env.GOOGLE_CLIENT_ID || "1040821447247-c52u2msqnljrd5nlpn9vgtdab91kp1dh.apps.googleusercontent.com",
-  client_secret: process.env.GOOGLE_CLIENT_SECRET || "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",
-  redirect_uri: process.env.GOOGLE_REDIRECT_URI || "https://accounts.google.com/o/oauth2/auth"
+  client_id: process.env.GOOGLE_CLIENT_ID!,
+  client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+  redirect_uri: process.env.GOOGLE_REDIRECT_URI!,
 };
 
 // Initialize Firebase
@@ -51,68 +79,25 @@ const oauth2Client = new google.auth.OAuth2(
   credentials.redirect_uri
 );
 
-// Request body interface
-interface TransferRequestBody {
-  folderIdOrUrl: string;
-  accessToken: string;
-  destinationPath?: string;
-}
-
-// Google Drive file interface
-interface GoogleDriveFile {
-  id?: string;
-  name?: string;
-  mimeType?: string;
-  size?: string | number;
-}
-
-// File transfer result interface
-interface FileTransferResult {
-  name: string;
-  status: 'success' | 'error';
-  size?: number;
-  firebasePath?: string;
-  error?: string;
-}
-
-// Transfer response interface
-interface TransferResponse {
-  message: string;
-  totalFiles: number;
-  results: FileTransferResult[];
-}
-
-// Error response interface
-interface ErrorResponse {
-  message: string;
-  error?: string;
-}
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<TransferResponse | ErrorResponse>
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
-
+// Route handler
+export const POST = async (req: NextRequest) => {
   try {
-    const { folderIdOrUrl, accessToken, destinationPath = '' } = req.body as TransferRequestBody;
+    const body = await req.json();
+    const { folderIdOrUrl, accessToken, destinationPath = '' } = body as TransferRequestBody;
 
     if (!folderIdOrUrl || !accessToken) {
-      return res.status(400).json({ message: 'Missing required parameters' });
+      return new Response(JSON.stringify({ message: 'Missing required parameters' }), {
+        status: 400,
+      });
     }
 
-    // Set auth credentials
     oauth2Client.setCredentials({ access_token: accessToken });
     const drive = google.drive({ version: 'v3', auth: oauth2Client });
 
-    // Extract folder ID from URL if needed
     const folderId = folderIdOrUrl.includes('/')
       ? folderIdOrUrl.match(/[-\w]{25,}/)?.[0] || folderIdOrUrl
       : folderIdOrUrl;
 
-    // Get all audio files from the Google Drive folder
     const response = await drive.files.list({
       q: `'${folderId}' in parents and (mimeType contains 'audio/' or mimeType contains 'application/octet-stream')`,
       fields: 'files(id, name, mimeType, size)',
@@ -120,34 +105,31 @@ export default async function handler(
 
     const files = response.data.files as GoogleDriveFile[];
     if (!files || files.length === 0) {
-      return res.status(404).json({ message: 'No audio files found in the specified folder' });
+      return new Response(JSON.stringify({ message: 'No audio files found in the specified folder' }), {
+        status: 404,
+      });
     }
 
     const transferResults: FileTransferResult[] = [];
     const tempDir = path.join(os.tmpdir(), 'gdrive-transfers');
-    
-    // Create temp directory if it doesn't exist
+
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
     }
 
-    // Process each file
     for (const file of files) {
       try {
-        // Make sure file name and ID are defined before proceeding
         if (!file.name || !file.id) {
           throw new Error(`File missing required properties: ${JSON.stringify(file)}`);
         }
 
-        const fileName = file.name as string;
-        
-        // Download the file from Google Drive
+        const fileName = file.name;
         const dest = fs.createWriteStream(path.join(tempDir, fileName));
         const fileRes = await drive.files.get(
           { fileId: file.id, alt: 'media' },
           { responseType: 'stream' }
         );
-        
+
         await new Promise<void>((resolve, reject) => {
           fileRes.data
             .on('end', () => resolve())
@@ -155,41 +137,44 @@ export default async function handler(
             .pipe(dest);
         });
 
-        // Read the downloaded file (we've already checked that file.name exists)
         const fileBuffer = fs.readFileSync(path.join(tempDir, fileName));
-        
-        // Upload to Firebase Storage
         const storageRef = ref(storage, `${destinationPath}/${fileName}`);
         await uploadBytes(storageRef, fileBuffer);
 
-        // Clean up the temp file
         fs.unlinkSync(path.join(tempDir, fileName));
 
         transferResults.push({
           name: fileName,
           status: 'success',
           size: parseInt(file.size as string, 10),
-          firebasePath: `${destinationPath}/${file.name}`
+          firebasePath: `${destinationPath}/${fileName}`,
         });
       } catch (error) {
         transferResults.push({
           name: file.name as string,
           status: 'error',
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     }
 
-    return res.status(200).json({
+    const responsePayload: TransferResponse = {
       message: 'Transfer completed',
       totalFiles: files.length,
-      results: transferResults
+      results: transferResults,
+    };
+
+    return new Response(JSON.stringify(responsePayload), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Transfer error:', error);
-    return res.status(500).json({
+    return new Response(JSON.stringify({
       message: 'Failed to transfer files',
       error: error instanceof Error ? error.message : 'Unknown error'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
-}
+};
