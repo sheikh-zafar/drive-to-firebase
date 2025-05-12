@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "sheikh-zafar-audio",
+  "private_key_id": "1ea49ba923eeedd31f5cdbec42a50802dd9954fb",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDbYWC/T8Accl2o\nDzKaZoQg8QaVlknLvB6CuHymDJQMlTaQk/0yOHt1jcGVOvH8LtUXPFFH95hnmPCK\ns7U9tdWV01ro6SUyJijJopkkesxxydK4Ote40H8tj5kGm6UN6+CWOA175fe5yxmW\n9KXd2hXbP35lCsOlfDPgwu/jEfCFytwSpuOKpIVlaRL35v5qH/pjbxnccv7P3Sz0\nSINzYQQuE0ft3eGx7wN7W2WuxvZn2sHQlMzL5AAz1BEPMEj+O843hDci2s3ganir\nIfU6eDk4Jpa7NdAY3N/tfS4hrGw64RRTH/RUeXpzHYmVMrvmmcOEylu5qAbJGrpl\nyM2Exb87AgMBAAECggEAMir7n+RR729r4YHQNaTZ9FqKAe1DZPbZF1WvE53uwU3i\nE3/0N+bYvNI1AbZgHiZrjou5nraNQKul3mIoQTty43dY48hlPCmjzDCFyuTWGfNo\nX779FAOCAd5DxVIUlbFqQ4//7WRymSdL68x4ndpAg0nq0pp6kT5s8qpBh3DTyxRj\nazwdNii2GhsPzuds1APUfblwDeS2Tdhl6JEh0v1FlfHi2QSrL2QLJ9+fHmcKCedJ\nreAgmN6ynADnu9L5+7wFHjyrY0ybLUS2bQHR0j9GYk4BROaBN0Nox3UwgIrRLwjm\nf8ip2zLrRYIRNt80can/BHiXP461QFC4LMdeq/6KYQKBgQD4YU7pzNaaQONJji+/\n2YAeTKzY8YlDToBBqTyHqOcmsJC7cEBRAbxwah5WEdGXaIJa+hgTvrz5yb2CpZ6Y\nekp7iPA0B2mm1FI08aEGVcf3az65tbuudGaXe59hlWUUTbtUOOR2fwrCYy9fspeP\niAXtAa8XtM+vfuCRDVDqX9FmUQKBgQDiHFDYTu4LWCg3SBQR1o/UIvTIy4nRDXhj\n7E/xrTa+BcLC9xKwedLFsr9kirIYwmj+tNcKpkzEVNAZh0u6Ix/1OY6AUJ3hef+0\n5OdJzL0Xba/cSduqJPjr3ZDL4ukTVGdMynWKX7X5j/edSeQA2RzJGF7/n0eHDKHE\n8wMcU6+NywKBgGMhEwmkwxGVTCETKmN7PvLYzzNWUt4V+oI6NPo/ouGCHoFwb3rl\nInwLHkhjnC69eyksH2fh/DIFHimCSCW6yPc81AEv5C69FoIi3Y1VtxU8LDCaI2mg\n80EKCbY8lbbgvx8CBcx1L6odQ88BzBNwykypG2RuuWTlUmMR2XVxAHXBAoGBAId4\nEZPXjlVrpwSgAa5CT//4RZJ8KAEBQg0UCz2v2ql0yCCJaUAkbPyXwIXbdyLQb5mS\n/Xfa9Ql4CwoQfnVyD/abWl5UbpMlxec6cbxMl0oPJJsmAR7qcdzW7abKN3ymSBHB\nBzU1bNCtydwJ5jn/2ng9SsV6R5+JGO7n7ggtt3OLAoGBAITjgqRPG4OwmEfQS153\nZt2fvKON41EfKAolQvRRoIWVsYQ5BCigv60+g7OOyd28jAEtagblN6xDO893OFRz\nL/Jz81IgdmhAslQuO4jVs0oARwnrmVkHyhuwE0jFEl+YzQ4+RyGoHbH3uC1qMJRF\nFclk95C0nCCm+32wgf0V5O6+\n-----END PRIVATE KEY-----\n",
+  "client_email": "aj-audio@sheikh-zafar-audio.iam.gserviceaccount.com",
+  "client_id": "105215704028677629044",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/aj-audio%40sheikh-zafar-audio.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
