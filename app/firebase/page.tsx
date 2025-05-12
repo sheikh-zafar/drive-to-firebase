@@ -95,7 +95,7 @@ export default function Home() {
                 required
               />
               <p className="mt-1 text-xs text-gray-500">
-                You'll need to authenticate your app separately to get this token
+                You&apos;ll need to authenticate your app separately to get this token
               </p>
             </div>
 
